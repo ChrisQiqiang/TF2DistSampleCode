@@ -3,7 +3,6 @@ import os
 import random
 import json
 import ssl
-import portpicker
 import tensorflow as tf
 import numpy as np
 from tensorflow import keras
