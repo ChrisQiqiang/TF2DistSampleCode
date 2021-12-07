@@ -5,7 +5,7 @@
 **[note:]** 与tf1不同的是，tf2中有chief, ps, worker三个角色，其中chief用来做总的调度器，ps和worker任务只需要创建server并挂起即可。
 
 
-#### 本机运行（1ps 1 worker， 使用 ami 名称为 mytf 创建实例）
+#### 【本机运行】（1ps 1 worker， 使用 ami 名称为 mytf 创建实例）
 
 (1) 下载代码
 ```
@@ -39,7 +39,7 @@ sudo nvidia-docker run -it -v /home/ubuntu/TF2DistSampleCode:/code --name chief 
                                         --chief_host=localhost:12347 " 
 ```
 
-#### 分布式运行（1ps 2 worker 1 chief， 使用 ami 名称为 mytf 创建实例）
+#### 【分布式运行】（1ps 2 worker 1 chief， 使用 ami 名称为 mytf 创建实例）
 假设 host 1: 172.31.92.94   host 2: 172.31.91.224， host1上放置1 ps 1 worker, host2上放置1个worker，
 **[note:]** 对于每一个机器上的计算资源，采用eager mode, 即有几个GPU就采用几个gpu并行计算，可以理解为worker以host为单位。
 
