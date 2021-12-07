@@ -197,18 +197,6 @@ if __name__ == '__main__':
             start=True)
         server.join()
     else:
-        lrdecay = tf.keras.callbacks.LearningRateScheduler(lrdecay) # learning rate decay 
-
-        variable_partitioner = (
-            tf.distribute.experimental.partitioners.MinSizePartitioner(
-                min_shard_bytes=(256 << 10),
-                max_shards=len(FLAGS.ps_hosts.split(','))))
-        cluster_resolver = tf.distribute.cluster_resolver.SimpleClusterResolver(
-            cluster_spec, rpc_layer="grpc")
-        strategy = tf.distribute.experimental.ParameterServerStrategy(
-            cluster_resolver,
-            variable_partitioner=variable_partitioner)
-        
         class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
                 'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
         # Load Cifar-10 data-set
@@ -255,12 +243,41 @@ if __name__ == '__main__':
             dataset = dataset.prefetch(2)
             return dataset
             # print(type())
-        train_dateset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
-        
+        # train_dateset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
+        print("############## Step: dataset prepared, set lrdecay next...")
+        lrdecay = tf.keras.callbacks.LearningRateScheduler(lrdecay) # learning rate decay 
+        print("############## Step: set lrdecay, partition variable next...")
+        variable_partitioner = (
+            tf.distribute.experimental.partitioners.MinSizePartitioner(
+                min_shard_bytes=(256 << 10),
+                max_shards=len(FLAGS.ps_hosts.split(','))))
+        print("############## Step: config cluster reslover next...")
+        cluster_resolver = tf.distribute.cluster_resolver.SimpleClusterResolver(cluster_spec, rpc_layer="grpc")
+        print("############## Step: define ParameterServerStrategy next...")
+        strategy = tf.distribute.experimental.ParameterServerStrategy(
+            cluster_resolver,
+            variable_partitioner=variable_partitioner)
+
+        distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
+        # print("############## Step: set coordinator next...")   
+        # coordinator =tf.distribute.experimental.coordinator.ClusterCoordinator(strategy=strategy)
+        # print("############## Step: prepare distributed dataset next...")  
+        # distributed_dataset = coordinator.create_per_worker_dataset(dataset_fn)
+        print("############## Step: model definition...")
         with strategy.scope():
             resnet50_model = resnet50()
-            
-        resnet50_model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), 
+        # from tensorflow.python.client import device_lib
+        # from tensorflow.keras.utils import multi_gpu_model
+        # gpus_num = len([ 1 for x in device_lib.list_local_devices() if x.device_type == 'GPU'])
+        # if gpus_num == 0:
+        #     para_model = resnet50_model
+        # elif gpus_num == 1:
+        #     with tf.device("/gpu:0"):
+        #         para_model = resnet50_model
+        # else:
+        #     para_model=multi_gpu_model(resnet50_model, gpus=gpus_num)
+        para_model = resnet50_model
+        para_model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), 
                             metrics=['acc'])
         
     #     working_dir="/tmp/tf2_result/"
@@ -274,14 +291,10 @@ if __name__ == '__main__':
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
-        
-        resnet_train = resnet50_model.fit(train_dateset, 
-                                        epochs=1, 
-                                        steps_per_epoch=train_im.shape[0]/100, 
+        print("############## Step: training begins...")
+        resnet_train = para_model.fit(distributed_dataset, 
+                                        epochs=100, 
+                                        steps_per_epoch=train_im.shape[0]/400, 
     #                                     validation_steps=valid_im.shape[0]/batch_size, 
     #                                     validation_data=validation_dataset, 
                                         callbacks=callbacks)
-
-
-
-
