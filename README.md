@@ -47,7 +47,7 @@ sudo nvidia-docker run -it -v /home/ubuntu/TF2DistSampleCode:/code --name chief 
 ```
 cd /home/ubuntu && git clone https://github.com/ChrisQiqiang/TF2DistSampleCode.git
 ```
-(2) 在host1上使用docker启动ps, worker进程
+(2) 在host1上使用docker启动ps, worker进程<br>
 **[note:]** 因为在tensorflow-gpu的docker镜像基础上还要安装scikit-learn等包, ami mytf的resnet这个docker image可以直接用，后续如果需要可以传到docker hub上。
 ```
 sudo nvidia-docker run -it -v /home/ubuntu/TF2DistSampleCode:/code --name ps --network host resnet /bin/bash -c "CUDA_VISIBLE_DEVICES=-1 \
