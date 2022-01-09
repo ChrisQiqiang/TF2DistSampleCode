@@ -1,23 +1,15 @@
-import multiprocessing
 import os
-import random
-import json
 import ssl
 import tensorflow as tf
 import numpy as np
-from tensorflow import keras
-#### Necessary Imports for Neural Net 
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, ZeroPadding2D,\
-     Flatten, BatchNormalization, AveragePooling2D, Dense, Activation, Add 
-from tensorflow.keras.models import Model
-from tensorflow.keras import activations
+#### Necessary Imports for Neural Net
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.regularizers import l2
-from sklearn.model_selection import train_test_split 
-import tensorflow.compat.v1 as tf1
+from sklearn.model_selection import train_test_split
+import tensorflow._api.v2.compat.v1 as tf1
+from model.ResNet import ResNet
 
 
+#TODO: 添加AlexNet, Inception, VGG 16的模型；iterator方式读入数据；验证集使用；checkpoint使用。
 tf1.app.flags.DEFINE_string('ps_hosts', 'None', "private_ip1:port1, private_ip2:port2,....")
 tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
@@ -25,126 +17,6 @@ tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
 
 FLAGS = tf1.app.flags.FLAGS
-
-
-def res_identity(x, filters): 
-  ''' renet block where dimension doesnot change.
-  The skip connection is just simple identity conncection
-  we will have 3 blocks and then input will be added
-  '''
-  x_skip = x # this will be used for addition with the residual block 
-  f1, f2 = filters
-
-  #first block 
-  x = Conv2D(f1, kernel_size=(1, 1), strides=(1, 1), padding='valid', kernel_regularizer=l2(0.001))(x)
-  x = BatchNormalization()(x)
-  x = Activation(activations.relu)(x)
-
-  #second block # bottleneck (but size kept same with padding)
-  x = Conv2D(f1, kernel_size=(3, 3), strides=(1, 1), padding='same', kernel_regularizer=l2(0.001))(x)
-  x = BatchNormalization()(x)
-  x = Activation(activations.relu)(x)
-
-  # third block activation used after adding the input
-  x = Conv2D(f2, kernel_size=(1, 1), strides=(1, 1), padding='valid', kernel_regularizer=l2(0.001))(x)
-  x = BatchNormalization()(x)
-  # x = Activation(activations.relu)(x)
-
-  # add the input 
-  x = Add()([x, x_skip])
-  x = Activation(activations.relu)(x)
-
-  return x
-
-def res_conv(x, s, filters):
-  '''
-  here the input size changes, when it goes via conv blocks
-  so the skip connection uses a projection (conv layer) matrix
-  ''' 
-  x_skip = x
-  f1, f2 = filters
-
-  # first block
-  x = Conv2D(f1, kernel_size=(1, 1), strides=(s, s), padding='valid', kernel_regularizer=l2(0.001))(x)
-  # when s = 2 then it is like downsizing the feature map
-  x = BatchNormalization()(x)
-  x = Activation(activations.relu)(x)
-
-  # second block
-  x = Conv2D(f1, kernel_size=(3, 3), strides=(1, 1), padding='same', kernel_regularizer=l2(0.001))(x)
-  x = BatchNormalization()(x)
-  x = Activation(activations.relu)(x)
-
-  #third block
-  x = Conv2D(f2, kernel_size=(1, 1), strides=(1, 1), padding='valid', kernel_regularizer=l2(0.001))(x)
-  x = BatchNormalization()(x)
-
-  # shortcut 
-  x_skip = Conv2D(f2, kernel_size=(1, 1), strides=(s, s), padding='valid', kernel_regularizer=l2(0.001))(x_skip)
-  x_skip = BatchNormalization()(x_skip)
-
-  # add 
-  x = Add()([x, x_skip])
-  x = Activation(activations.relu)(x)
-
-  return x
-
- ### Combine the above functions to build 50 layers resnet. 
-def resnet50():
-
-  input_im = Input(shape=(train_im.shape[1], train_im.shape[2], train_im.shape[3])) # cifar 10 images size
-  x = ZeroPadding2D(padding=(3, 3))(input_im)
-
-  # 1st stage
-  # here we perform maxpooling, see the figure above
-
-  x = Conv2D(64, kernel_size=(7, 7), strides=(2, 2))(x)
-  x = BatchNormalization()(x)
-  x = Activation(activations.relu)(x)
-  x = MaxPooling2D((3, 3), strides=(2, 2))(x)
-
-  #2nd stage 
-  # frm here on only conv block and identity block, no pooling
-
-  x = res_conv(x, s=1, filters=(64, 256))
-  x = res_identity(x, filters=(64, 256))
-  x = res_identity(x, filters=(64, 256))
-
-  # 3rd stage
-
-  x = res_conv(x, s=2, filters=(128, 512))
-  x = res_identity(x, filters=(128, 512))
-  x = res_identity(x, filters=(128, 512))
-  x = res_identity(x, filters=(128, 512))
-
-  # 4th stage
-
-  x = res_conv(x, s=2, filters=(256, 1024))
-  x = res_identity(x, filters=(256, 1024))
-  x = res_identity(x, filters=(256, 1024))
-  x = res_identity(x, filters=(256, 1024))
-  x = res_identity(x, filters=(256, 1024))
-  x = res_identity(x, filters=(256, 1024))
-
-  # 5th stage
-
-  x = res_conv(x, s=2, filters=(512, 2048))
-  x = res_identity(x, filters=(512, 2048))
-  x = res_identity(x, filters=(512, 2048))
-
-  # ends with average pooling and dense connection
-
-  x = AveragePooling2D((2, 2), padding='same')(x)
-
-  x = Flatten()(x)
-  x = Dense(len(class_types), activation='softmax', kernel_initializer='he_normal')(x) #multi-class
-
-  # define the model 
-
-  model = Model(inputs=input_im, outputs=x, name='Resnet50')
-
-  return model
-
 
   ### Define some Callbacks
 def lrdecay(epoch):
@@ -157,21 +29,16 @@ def lrdecay(epoch):
         lr *= 1e-2
     elif epoch > 80:
         lr *= 1e-1
-    #print('Learning rate: ', lr)
     return lr
-  # if epoch < 40:
-  #   return 0.01
-  # else:
-  #   return 0.01 * np.math.exp(0.03 * (40 - epoch))
- 
-
 
 def earlystop(mode):
   if mode=='acc':
     estop = tf.keras.callbacks.EarlyStopping(monitor='val_acc', patience=15, mode='max')
   elif mode=='loss':
     estop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, mode='min')
-  return estop  
+  return estop
+
+
 
 if __name__ == '__main__':
     # Set the environment variable to allow reporting worker and ps failure to the
@@ -198,10 +65,9 @@ if __name__ == '__main__':
         server.join()
     else:
         class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
-                'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
-        # Load Cifar-10 data-set
-        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
-    
+                'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-100 website
+        # Load Cifar-100 data-set
+        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
         #### Normalize the images to pixel values (0, 1)
         train_im, test_im = train_im/255.0 , test_im/255.0
         #### Check the format of the data 
@@ -218,9 +84,9 @@ if __name__ == '__main__':
 
         ### One hot encoding for labels 
 
-        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=10, dtype='uint8')
+        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=100, dtype='uint8')
 
-        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=10, dtype='uint8')
+        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=100, dtype='uint8')
 
         ### Train -test split 
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.20, 
@@ -231,18 +97,7 @@ if __name__ == '__main__':
         print ('new validation data shape: ', valid_im.shape)
         print ("validation labels shape: ", valid_lab.shape)
 
-        
-        def dataset_fn(input_context):
-            global_batch_size = 64
-            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
-            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat()
-            dataset = dataset.shard(
-                input_context.num_input_pipelines,
-                input_context.input_pipeline_id)
-            dataset = dataset.batch(batch_size)
-            dataset = dataset.prefetch(2)
-            return dataset
-            # print(type())
+
         # train_dateset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
         print("############## Step: dataset prepared, set lrdecay next...")
         lrdecay = tf.keras.callbacks.LearningRateScheduler(lrdecay) # learning rate decay 
@@ -258,14 +113,14 @@ if __name__ == '__main__':
             cluster_resolver,
             variable_partitioner=variable_partitioner)
 
-        distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
+
         # print("############## Step: set coordinator next...")   
         # coordinator =tf.distribute.experimental.coordinator.ClusterCoordinator(strategy=strategy)
         # print("############## Step: prepare distributed dataset next...")  
         # distributed_dataset = coordinator.create_per_worker_dataset(dataset_fn)
         print("############## Step: model definition...")
         with strategy.scope():
-            resnet50_model = resnet50()
+            resnet50_model = ResNet('ResNet50', 100)
         # from tensorflow.python.client import device_lib
         # from tensorflow.keras.utils import multi_gpu_model
         # gpus_num = len([ 1 for x in device_lib.list_local_devices() if x.device_type == 'GPU'])
@@ -276,10 +131,10 @@ if __name__ == '__main__':
         #         para_model = resnet50_model
         # else:
         #     para_model=multi_gpu_model(resnet50_model, gpus=gpus_num)
-        para_model = resnet50_model
-        para_model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), 
+
+        resnet50_model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                             metrics=['acc'])
-        
+
     #     working_dir="/tmp/tf2_result/"
     #     log_dir = os.path.join(working_dir, 'log')
     #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
@@ -292,7 +147,20 @@ if __name__ == '__main__':
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
         print("############## Step: training begins...")
-        resnet_train = para_model.fit(distributed_dataset, 
+        def dataset_fn(input_context):
+            global_batch_size = 64
+            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
+            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat()
+            dataset = dataset.shard(
+                input_context.num_input_pipelines,
+                input_context.input_pipeline_id)
+            dataset = dataset.batch(batch_size)
+            dataset = dataset.prefetch(2)
+            return dataset
+
+
+        distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
+        resnet_train = resnet50_model.fit(distributed_dataset,
                                         epochs=100, 
                                         steps_per_epoch=train_im.shape[0]/400, 
     #                                     validation_steps=valid_im.shape[0]/batch_size, 
