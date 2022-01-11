@@ -1,6 +1,6 @@
 from tensorflow.keras import layers, models, Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Dropout, BatchNormalization, \
-  Activation, GlobalAveragePooling2D
+  Activation, GlobalAveragePooling2D,ZeroPadding2D
 
 
 # 继承Layer,建立resnet50 101 152卷积层模块
@@ -46,7 +46,8 @@ def ResNet(Netname, nb_classes):
   filter_block3 = [256, 256, 1024]
   filter_block4 = [512, 512, 2048]
 
-  img_input = Input(shape=(224, 224, 3))
+  img_input = Input(shape=(32, 32, 3))
+  x = ZeroPadding2D(padding=(3, 3))(img_input)
   # stem block
   x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='stem_conv')(img_input)
   x = BatchNormalization(axis=3, name='stem_bn')(x)
