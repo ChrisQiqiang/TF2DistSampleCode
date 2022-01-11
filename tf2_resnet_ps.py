@@ -7,7 +7,6 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
 from model.ResNet import ResNet
-##gtest
 
 #TODO: 添加AlexNet, Inception, VGG 16的模型；iterator方式读入数据；验证集使用；checkpoint使用。
 tf1.app.flags.DEFINE_string('ps_hosts', 'None', "private_ip1:port1, private_ip2:port2,....")
@@ -15,7 +14,7 @@ tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
-
+print("title")
 FLAGS = tf1.app.flags.FLAGS
 
   ### Define some Callbacks
@@ -41,6 +40,7 @@ def earlystop(mode):
 
 
 if __name__ == '__main__':
+    print("main")
     # Set the environment variable to allow reporting worker and ps failure to the
     # coordinator. This is a workaround and won't be necessary in the future.
     ssl._create_default_https_context = ssl._create_unverified_context
