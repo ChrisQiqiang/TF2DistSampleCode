@@ -65,9 +65,9 @@ if __name__ == '__main__':
         server.join()
     else:
         class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
-                'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-100 website
-        # Load Cifar-100 data-set
-        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
+                'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
+        # Load Cifar-10 data-set
+        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
         #### Normalize the images to pixel values (0, 1)
         train_im, test_im = train_im/255.0 , test_im/255.0
         #### Check the format of the data 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
         # distributed_dataset = coordinator.create_per_worker_dataset(dataset_fn)
         print("############## Step: model definition...")
         with strategy.scope():
-            resnet50_model = ResNet('ResNet50', 100)
+            resnet50_model = ResNet('ResNet50', 10)
         # from tensorflow.python.client import device_lib
         # from tensorflow.keras.utils import multi_gpu_model
         # gpus_num = len([ 1 for x in device_lib.list_local_devices() if x.device_type == 'GPU'])

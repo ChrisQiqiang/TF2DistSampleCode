@@ -1,23 +1,3 @@
-import multiprocessing
-import os
-import random
-import json
-import ssl
-import tensorflow as tf
-import numpy as np
-from tensorflow import keras
-#### Necessary Imports for Neural Net
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, ZeroPadding2D,\
-     Flatten, BatchNormalization, AveragePooling2D, Dense, Activation, Add
-from tensorflow.keras.models import Model
-from tensorflow.keras import activations
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.regularizers import l2
-from sklearn.model_selection import train_test_split
-
-import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers, models, Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Dense, Flatten, Dropout, BatchNormalization, \
   Activation, GlobalAveragePooling2D
