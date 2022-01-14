@@ -7,6 +7,9 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
 from model.AlexNet import alexnet
+from model.Inception import Inception10
+from model.VGG import VGG16
+from model.ResNet import ResNet
 
 
 #TODO: 添加AlexNet, Inception, VGG 16的模型；iterator方式读入数据；验证集使用；checkpoint使用。
@@ -15,7 +18,7 @@ tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
-tf1.app.flags.DEFINE_integer('model_name', alexnet , '')
+tf1.app.flags.DEFINE_integer('model_name', alexnet, '')
 
 FLAGS = tf1.app.flags.FLAGS
 
@@ -52,6 +55,7 @@ if __name__ == '__main__':
     cluster_dict["ps"] = FLAGS.ps_hosts.split(',')
     cluster_dict["chief"] = FLAGS.chief_host.split(',')
     cluster_spec = tf.train.ClusterSpec(cluster_dict)
+    model_name=FLAGS.model_name
     if FLAGS.task_name in ("worker", "ps"):
         # Set the environment variable to allow reporting worker and ps failure to the
         # coordinator. This is a workaround and won't be necessary in the future.
@@ -116,7 +120,21 @@ if __name__ == '__main__':
 
         print("############## Step: model definition...")
         with strategy.scope():
-            model = alexnet();
+            if model_name.lower() == "alexnet":
+                model=alexnet()
+            elif model_name.lower() == "inception":
+                model=Inception10()
+            elif model_name.lower() == "vgg":
+                model=VGG16()
+            elif model_name.lower() == "resnet32":
+                model=ResNet('ResNet32', 10)
+            elif model_name.lower() == "resnet50":
+                model = ResNet('ResNet50', 10)
+            elif model_name.lower() == "resnet101":
+                model = ResNet('ResNet101', 10)
+            else:
+                ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
+                raise ex
 
         model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                             metrics=['acc'])
