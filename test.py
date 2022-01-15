@@ -88,9 +88,9 @@ if __name__ == '__main__':
 
         ### One hot encoding for labels
 
-        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=100, dtype='uint8')
+        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=10, dtype='uint8')
 
-        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=100, dtype='uint8')
+        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=10, dtype='uint8')
 
         ### Train -test split
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.20,
