@@ -68,10 +68,10 @@ if __name__ == '__main__':
             start=True)
         server.join()
     else:
-        class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
-                'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
+        # class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
+        #         'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
         # Load Cifar-10 data-set
-        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
+        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
         #### Normalize the images to pixel values (0, 1)
         train_im, test_im = train_im/255.0 , test_im/255.0
         #### Check the format of the data
@@ -88,9 +88,9 @@ if __name__ == '__main__':
 
         ### One hot encoding for labels
 
-        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=10, dtype='uint8')
+        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=100, dtype='uint8')
 
-        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=10, dtype='uint8')
+        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=100, dtype='uint8')
 
         ### Train -test split
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.20,
@@ -126,11 +126,11 @@ if __name__ == '__main__':
             elif model_name.lower() == "vgg":
                 model=VGG16()
             elif model_name.lower() == "resnet32":
-                model=ResNet('ResNet32', 10)
+                model=ResNet('ResNet32', 100)
             elif model_name.lower() == "resnet50":
-                model = ResNet('ResNet50', 10)
+                model = ResNet('ResNet50', 100)
             elif model_name.lower() == "resnet101":
-                model = ResNet('ResNet101', 10)
+                model = ResNet('ResNet101', 100)
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
