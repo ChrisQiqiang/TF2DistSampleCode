@@ -2,7 +2,6 @@ import os
 import ssl
 import tensorflow as tf
 import numpy as np
-#### Necessary Imports for Neural Net
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
