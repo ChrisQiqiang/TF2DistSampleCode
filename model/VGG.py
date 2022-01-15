@@ -72,7 +72,7 @@ class VGG16(Model):
         self.d7 = Dropout(0.2)
         self.f3 = Dense(10, activation='softmax')
 
-    def __call__(self, x):
+    def call    (self, x):
         x = self.c1(x)
         x = self.b1(x)
         x = self.a1(x)

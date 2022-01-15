@@ -1,7 +1,6 @@
 import tensorflow as tf
 import os
 import numpy as np
-from matplotlib import pyplot as plt
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, Dropout, Flatten, Dense,GlobalAveragePooling2D
 from tensorflow.keras import Model
 
@@ -69,7 +68,7 @@ class Inception10(Model):
         self.p1 = GlobalAveragePooling2D()
         self.f1 = Dense(num_classes, activation='softmax')
 
-    def __call__(self, x):
+    def call(self, x):
         x = self.c1(x)
         x = self.blocks(x)
         x = self.p1(x)
