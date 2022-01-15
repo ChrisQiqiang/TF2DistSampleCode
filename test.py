@@ -18,7 +18,7 @@ tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
-tf1.app.flags.DEFINE_integer('model_name', 'alexnet', '')
+tf1.app.flags.DEFINE_string('model_name', 'alexnet', '')
 
 FLAGS = tf1.app.flags.FLAGS
 
