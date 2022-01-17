@@ -24,7 +24,7 @@ FLAGS = tf1.app.flags.FLAGS
 
   ### Define some Callbacks
 def lrdecay(epoch):
-    lr = 1e-3
+    lr = 1e-2
     if epoch > 180:
         lr *= 0.5e-3
     elif epoch > 160:
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
         resnet_train = model.fit(distributed_dataset,
                                         epochs=100,
-                                        steps_per_epoch=train_im.shape[0]/400,
+                                        steps_per_epoch=100,
     #                                     validation_steps=valid_im.shape[0]/batch_size,
     #                                     validation_data=validation_dataset,
                                         callbacks=callbacks)
