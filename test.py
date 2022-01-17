@@ -18,6 +18,7 @@ tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
 tf1.app.flags.DEFINE_string('model_name', 'alexnet', '')
+tf1.app.flags.DEFINE_integer('batch_size', 1024 , '')
 
 FLAGS = tf1.app.flags.FLAGS
 
@@ -151,7 +152,7 @@ if __name__ == '__main__':
         ]
         print("############## Step: training begins...")
         def dataset_fn(input_context):
-            global_batch_size = 64
+            global_batch_size = FLAGS.batch_size
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
             dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat()
             dataset = dataset.shard(
