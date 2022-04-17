@@ -19,6 +19,7 @@ tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
 tf1.app.flags.DEFINE_string('model_name', 'alexnet', '')
 tf1.app.flags.DEFINE_integer('batch_size', 1024 , '')
+tf1.app.flags.DEFINE_string('dataset', 'cifar100' , '')
 
 FLAGS = tf1.app.flags.FLAGS
 
@@ -72,7 +73,10 @@ if __name__ == '__main__':
         # class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
         #         'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
         # Load Cifar-10 data-set
-        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
+		if FLAGS.dataset == 'cifar10':
+			(train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
+		elif FLAGS.dataset == 'cifar100':
+			(train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
         #### Normalize the images to pixel values (0, 1)
         train_im, test_im = train_im/255.0 , test_im/255.0
         #### Check the format of the data
@@ -88,10 +92,12 @@ if __name__ == '__main__':
         print (len(unique))
 
         ### One hot encoding for labels
-
-        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=100, dtype='uint8')
-
-        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=100, dtype='uint8')
+		if FLAGS.dataset == 'cifar10':
+			train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=10, dtype='uint8')
+			test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=10, dtype='uint8')
+		elif FLAGS.dataset == 'cifar100':
+			train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=100, dtype='uint8')
+			test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=100, dtype='uint8')
 
         ### Train -test split
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.20,
