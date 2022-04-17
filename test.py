@@ -162,7 +162,7 @@ if __name__ == '__main__':
         def dataset_fn(input_context):
             global_batch_size = FLAGS.batch_size
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
-			print("#######batch size :", batch_size)
+            print("#######batch size :", batch_size)
             dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat()
             dataset = dataset.shard(
                 input_context.num_input_pipelines,
