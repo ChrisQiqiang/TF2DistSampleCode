@@ -18,12 +18,14 @@ tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
 tf1.app.flags.DEFINE_string('model_name', 'alexnet', '')
+tf1.app.flags.DEFINE_integer('batch_size', 512 , '')
+tf1.app.flags.DEFINE_string('dataset', 'cifar100' , '')
 
 FLAGS = tf1.app.flags.FLAGS
 
   ### Define some Callbacks
 def lrdecay(epoch):
-    lr = 1e-3
+    lr = 1e-2
     if epoch > 180:
         lr *= 0.5e-3
     elif epoch > 160:
@@ -71,7 +73,14 @@ if __name__ == '__main__':
         # class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
         #         'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
         # Load Cifar-10 data-set
-        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
+        num_class = 0
+        if FLAGS.dataset == 'cifar10':
+            num_class = 10 
+            (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
+        elif FLAGS.dataset == 'cifar100':
+            num_class = 100
+            (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
+
         #### Normalize the images to pixel values (0, 1)
         train_im, test_im = train_im/255.0 , test_im/255.0
         #### Check the format of the data
@@ -88,9 +97,9 @@ if __name__ == '__main__':
 
         ### One hot encoding for labels
 
-        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=100, dtype='uint8')
+        train_lab_categorical = tf.keras.utils.to_categorical(train_lab, num_classes=num_class, dtype='uint8')
+        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=num_class, dtype='uint8')
 
-        test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=100, dtype='uint8')
 
         ### Train -test split
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.20,
@@ -126,11 +135,15 @@ if __name__ == '__main__':
             elif model_name.lower() == "vgg":
                 model=VGG16()
             elif model_name.lower() == "resnet152":
+<<<<<<< HEAD
                 model=ResNet('ResNet152', 100)
+=======
+                model=ResNet('ResNet152', num_class)
+>>>>>>> c3be3b864ba75c2f2ff4063c39579bbc01d5f81c
             elif model_name.lower() == "resnet50":
-                model = ResNet('ResNet50', 100)
+                model = ResNet('ResNet50', num_class)
             elif model_name.lower() == "resnet101":
-                model = ResNet('ResNet101', 100)
+                model = ResNet('ResNet101', num_class)
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
@@ -151,8 +164,10 @@ if __name__ == '__main__':
         ]
         print("############## Step: training begins...")
         def dataset_fn(input_context):
-            global_batch_size = 64
+            global_batch_size = FLAGS.batch_size
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
+            print("#######model :", FLAGS.model_name)
+            print("#######batch size :", batch_size)
             dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat()
             dataset = dataset.shard(
                 input_context.num_input_pipelines,
@@ -164,7 +179,9 @@ if __name__ == '__main__':
         distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
         resnet_train = model.fit(distributed_dataset,
                                         epochs=100,
-                                        steps_per_epoch=train_im.shape[0]/400,
+                                        steps_per_epoch=100,
     #                                     validation_steps=valid_im.shape[0]/batch_size,
     #                                     validation_data=validation_dataset,
                                         callbacks=callbacks)
+    #iteration number = epochs * steps_per_epoch
+    #steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
