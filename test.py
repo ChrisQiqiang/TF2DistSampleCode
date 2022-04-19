@@ -125,8 +125,8 @@ if __name__ == '__main__':
                 model=Inception10()
             elif model_name.lower() == "vgg":
                 model=VGG16()
-            elif model_name.lower() == "resnet32":
-                model=ResNet('ResNet32', 100)
+            elif model_name.lower() == "resnet152":
+                model=ResNet('ResNet152', 100)
             elif model_name.lower() == "resnet50":
                 model = ResNet('ResNet50', 100)
             elif model_name.lower() == "resnet101":

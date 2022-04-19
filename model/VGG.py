@@ -1,8 +1,12 @@
+import random
+
 import tensorflow as tf
 import os
 import numpy as np
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, Dropout, Flatten, Dense
 from tensorflow.keras import Model
+from sklearn.model_selection import train_test_split
+from tensorflow.python.keras.applications.vgg16 import VGG16
 
 np.set_printoptions(threshold=np.inf)
 
@@ -71,7 +75,9 @@ class VGG16(Model):
         self.d7 = Dropout(0.2)
         self.f3 = Dense(10, activation='softmax')
 
-    def call    (self, x):
+    def call(self, x):
+        # print(x)
+        x = tf.cast(x, tf.float32, name='To_FLOAT')
         x = self.c1(x)
         x = self.b1(x)
         x = self.a1(x)
@@ -132,4 +138,8 @@ class VGG16(Model):
         x = self.f2(x)
         x = self.d7(x)
         y = self.f3(x)
+        y = tf.cast(y, tf.float32, name='To_FLOAT_Y')
+        # print(type(y))
         return y
+
+
