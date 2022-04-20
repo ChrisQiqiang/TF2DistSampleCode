@@ -70,7 +70,7 @@ if [ $update_code -eq 1 ];then
 	for host in "${hosts[@]}"
 	do
 		echo ..
-		ssh -i tf-faye.pem ubuntu@${host} "cd /home/ubuntu && sudo rm -rf TF2DistSampleCode && git clone https://github.com/ChrisQiqiang/TF2DistSampleCode.git" & 
+		ssh -i tf-faye.pem ubuntu@${host} "cd /home/ubuntu && sudo rm -rf TF2DistSampleCode && git clone https://github.com/ChrisQiqiang/TF2DistSampleCode.git" 
 	done
 fi
 
