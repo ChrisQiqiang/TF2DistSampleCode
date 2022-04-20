@@ -105,7 +105,8 @@ if __name__ == '__main__':
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.90,
                                                                     stratify=train_lab_categorical,
                                                                     random_state=40, shuffle = True)
-
+        if model_name.lower() == "vgg":
+            train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
         print ("train data shape after the split: ", train_im.shape)
         print ('new validation data shape: ', valid_im.shape)
         print ("validation labels shape: ", valid_lab.shape)
@@ -133,7 +134,6 @@ if __name__ == '__main__':
             elif model_name.lower() == "inception":
                 model=Inception10()
             elif model_name.lower() == "vgg":
-                train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
                 model=vgg_16()
             elif model_name.lower() == "resnet152":
                 model=ResNet('ResNet152', num_class)
