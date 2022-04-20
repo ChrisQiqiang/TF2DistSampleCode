@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
 
         ### Train -test split
-        train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.90,
+        train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.98,
                                                                     stratify=train_lab_categorical,
                                                                     random_state=40, shuffle = True)
         if model_name.lower() == "vgg":
