@@ -106,7 +106,7 @@ func_train()
                                 --network host resnet /bin/bash -c \
                                 \" python /code/train.py \
                                     --model_name=resnet50 \
-                                    --dataset=cifar10 \
+                                    --dataset=vgg \
                                     --batch_size=256 \
                                     --task_name=${task[$i]} \
                                     --task_index=${j} \

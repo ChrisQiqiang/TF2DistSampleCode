@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
 from model.AlexNet import alexnet
 from model.Inception import Inception10
-from model.VGG import VGG16
+from model.VGG import vgg_16
 from model.ResNet import ResNet
 
 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
             elif model_name.lower() == "inception":
                 model=Inception10()
             elif model_name.lower() == "vgg":
-                model=VGG16()
+                model=vgg_16()
             elif model_name.lower() == "resnet152":
                 model=ResNet('ResNet152', num_class)
             elif model_name.lower() == "resnet50":
@@ -144,7 +144,7 @@ if __name__ == '__main__':
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
 
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-2),
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                             metrics=['acc'])
 
     #     working_dir="/tmp/tf2_result/"
