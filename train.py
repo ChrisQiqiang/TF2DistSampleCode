@@ -132,7 +132,7 @@ if __name__ == '__main__':
                 model=alexnet()
             elif model_name.lower() == "inception":
                 model=Inception10()
-            elif model_name.lower() == "vgg"
+            elif model_name.lower() == "vgg":
                 model=VGG16()
             elif model_name.lower() == "resnet152":
                 model=ResNet('ResNet152', num_class)
