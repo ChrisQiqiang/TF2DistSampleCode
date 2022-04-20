@@ -16,7 +16,7 @@ np.set_printoptions(threshold=np.inf)
 
 def vgg_16():
         model = Sequential()
-        model.add(Conv2D(input_shape=(32, 32, 3), filters=64, kernel_size=(3, 3), padding="same", activation="relu"))
+        model.add(Conv2D(input_shape=(224, 224, 3), filters=64, kernel_size=(3, 3), padding="same", activation="relu"))
         model.add(Conv2D(filters=64, kernel_size=(3, 3), padding="same", activation="relu"))
         model.add(MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
         model.add(Conv2D(filters=128, kernel_size=(3, 3), padding="same", activation="relu"))
@@ -40,10 +40,10 @@ def vgg_16():
         model.add(Dense(units=10, activation="softmax"))
         print("#######hi")
         return model
-# if __name__ == '__main__':
-#     model1 = vgg16()
-#     from tensorflow.keras.applications.vgg16 import VGG16
-#     model2 = VGG16()
-#     model1.summary()
-#     model2.summary()
+if __name__ == '__main__':
+    model1 = vgg_16()
+    model1.summary()
+    # from tensorflow.keras.applications.vgg16 import VGG16
+    # model2 = VGG16()
+    # model2.summary()
 

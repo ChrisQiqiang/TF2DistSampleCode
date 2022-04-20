@@ -114,10 +114,10 @@ def keras_cifar10_test():
     test_lab_categorical = tf.keras.utils.to_categorical(test_lab, num_classes=num_class, dtype='uint8')
 
     ### Train -test split
-    train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.20,
+    train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.90,
                                                                 stratify=train_lab_categorical,
                                                                 random_state=40, shuffle=True)
-
+    train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
     print("train data shape after the split: ", train_im.shape)
     print('new validation data shape: ', valid_im.shape)
     print("validation labels shape: ", valid_lab.shape)
