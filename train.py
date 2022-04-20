@@ -106,7 +106,8 @@ if __name__ == '__main__':
                                                                     stratify=train_lab_categorical,
                                                                     random_state=40, shuffle = True)
         if model_name.lower() == "vgg":
-            train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
+            with tf.device('/cpu:0'):
+                train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
         print ("train data shape after the split: ", train_im.shape)
         print ('new validation data shape: ', valid_im.shape)
         print ("validation labels shape: ", valid_lab.shape)
