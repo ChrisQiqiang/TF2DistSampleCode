@@ -8,7 +8,7 @@ hosts_private=("172.31.85.198" "172.31.87.170")
 placement=('1' '0' '1')
 #1为获取gitclone（刚创建实例时）
 update_code=1
-install_nethogs=1
+install_nethogs=0
 
 ##########打印配置信息#######
 declare -a info
@@ -122,8 +122,8 @@ do
         echo $command
         ssh -i tf-faye.pem ubuntu@${host} "sudo docker stop ${task[$i]} > /dev/null && sudo docker rm  ${task[$i]} > /dev/null" 
         ssh -i tf-faye.pem ubuntu@${host} " mkdir -p /tmp/logs/bandwidth/ && mkdir -p /tmp/logs/cpu/ && mkdir -p /tmp/logs/gpu/"
-        ssh -i tf-faye.pem ubuntu@${host} "sudo nethogs -t -d 1 | grep python> /tmp/logs/bandwidth/${task[$i]}_${j}.txt &" &
-        ssh -i tf-faye.pem ubuntu@${host} "nvidia-smi --query-gpu=timestamp,uuid,utilization.gpu,pcie.link.gen.current,utilization.memory,memory.used --format=csv --loop-ms=1000 -f /tmp/logs/gpu/_${task[$i]}_${j}.txt &" &
+        ssh -i tf-faye.pem ubuntu@${host} "sudo nethogs -t -d 1 | grep python > /tmp/logs/bandwidth/${task[$i]}_${j}.txt &" &
+        ssh -i tf-faye.pem ubuntu@${host} "sudo nvidia-smi --query-gpu=timestamp,uuid,utilization.gpu,pcie.link.gen.current,utilization.memory,memory.used --format=csv --loop-ms=1000 -f /tmp/logs/gpu/${task[$i]}_${j}.txt &" &
         ssh -i tf-faye.pem ubuntu@${host} "sudo mpstat 1 > /tmp/logs/cpu/${task[$i]}_${j}.txt &" &
 
 		if [ $i -eq 0 ];then
