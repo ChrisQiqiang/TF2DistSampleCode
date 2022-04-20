@@ -134,12 +134,9 @@ if __name__ == '__main__':
                 model=Inception10()
             elif model_name.lower() == "vgg":
                 model=VGG16()
-            elif model_name.lower() == "resnet152":
-<<<<<<< HEAD
+            elif model_name.lower() == "resnet152"
                 model=ResNet('ResNet152', 100)
-=======
                 model=ResNet('ResNet152', num_class)
->>>>>>> c3be3b864ba75c2f2ff4063c39579bbc01d5f81c
             elif model_name.lower() == "resnet50":
                 model = ResNet('ResNet50', num_class)
             elif model_name.lower() == "resnet101":
