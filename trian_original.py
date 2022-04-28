@@ -78,7 +78,7 @@ if __name__ == '__main__':
         # Load Cifar-10 data-set
         num_class = 0
         if FLAGS.dataset == 'cifar10':
-            num_class = 10 
+            num_class = 10
             (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
         elif FLAGS.dataset == 'cifar100':
             num_class = 100
@@ -149,22 +149,16 @@ if __name__ == '__main__':
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
-            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), metrics=['acc'])
+            optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.1)
+            accuracy = tf.keras.metrics.Accuracy()
+            model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=accuracy)
         print("##############配置训练相关参数，图片预处理，callback函数等...")
-    #     working_dir="/tmp/tf2_result/"
-    #     log_dir = os.path.join(working_dir, 'log')
-    #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
-    #     backup_dir = os.path.join(working_dir, 'backup')
-        callbacks = [
-        lrdecay
-    #     ,tf.keras.callbacks.TensorBoard(log_dir=log_dir)
-    #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
-    #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
-        ]
         global_batch_size = FLAGS.batch_size
+
         def preprocessing_fn(raw_image, raw_label):
             image = tf.image.resize_with_pad(raw_image, target_height=224, target_width=224)
             return image, raw_label
+
 
         def dataset_fn(input_context):
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
@@ -174,25 +168,47 @@ if __name__ == '__main__':
                 .map(preprocessing_fn, num_parallel_calls=batch_size).batch(batch_size)
             dataset = dataset.prefetch(10)
             return dataset
-        distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
 
 
-        def valid_dataset_fn(input_context):
-            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
-            print("#######Test model from valid data (a part of train data) :", FLAGS.model_name)
-            print("#######batch size :", batch_size)
-            valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).shuffle(64).repeat() \
-                .map(preprocessing_fn, num_parallel_calls=batch_size).batch(batch_size)
-            valid_dataset = valid_dataset.prefetch(10)
-            return valid_dataset
-        validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
+        @tf.function
+        def step_fn(iterator):
+            def replica_fn(batch_data, labels):
+                with tf.GradientTape() as tape:
+                    pred = model(batch_data, training=True)
+                    per_example_loss = tf.keras.losses.BinaryCrossentropy(
+                        reduction=tf.keras.losses.Reduction.NONE)(labels, pred)
+                    loss = tf.nn.compute_average_loss(per_example_loss)
+                    gradients = tape.gradient(loss, model.trainable_variables)
+                optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+                actual_pred = tf.cast(tf.greater(pred, 0.5), tf.int64)
+                accuracy.update_state(labels, actual_pred)
+                return loss
 
-        # iteration number = epochs * steps_per_epoch
-        # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
-        print("############## Step: training begins...")
+            batch_data, labels = next(iterator)
+            losses = strategy.run(replica_fn, args=(batch_data, labels))
+            print(losses)
+            avg_loss = strategy.reduce(tf.distribute.ReduceOp.SUM, losses, axis=None)
+            print(avg_loss)
+            return avg_loss
 
-        model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
-                                        # validation_steps=valid_im.shape[0]/global_batch_size,
-                                        # validation_data=validation_dataset,
-                                        callbacks=callbacks)
 
+        @tf.function
+        def per_worker_dataset_fn():
+            return strategy.distribute_datasets_from_function(dataset_fn)
+
+
+        coordinator = tf.distribute.coordinator.ClusterCoordinator(strategy)
+        per_worker_dataset = coordinator.create_per_worker_dataset(per_worker_dataset_fn)
+        per_worker_iterator = iter(per_worker_dataset)
+        per_worker_dataset = coordinator.create_per_worker_dataset(per_worker_dataset_fn)
+        per_worker_iterator = iter(per_worker_dataset)
+
+        num_epochs = 4
+        steps_per_epoch = 5
+        for i in range(num_epochs):
+            accuracy.reset_states()
+            for _ in range(steps_per_epoch):
+                coordinator.schedule(step_fn, args=(per_worker_iterator,))
+            # Wait at epoch boundaries.
+            coordinator.join()
+            print("Finished epoch %d, accuracy is %f." % (i, accuracy.result().numpy()))
