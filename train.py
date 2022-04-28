@@ -5,10 +5,8 @@ import numpy as np
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
-from model.AlexNet import alexnet
-from model.Inception import Inception10
 from model.VGG import vgg_16
-from model.ResNet import ResNet
+
 
 
 #TODO: 添加AlexNet, Inception, VGG 16的模型；iterator方式读入数据；验证集使用；checkpoint使用。
@@ -23,7 +21,7 @@ tf1.app.flags.DEFINE_string('dataset', 'cifar100' , '')
 
 FLAGS = tf1.app.flags.FLAGS
 
-  ### Define some Callbacks
+### Define some Callbacks
 def lrdecay(epoch):
     lr = 1e-2
     if epoch > 180:
@@ -42,6 +40,11 @@ def earlystop(mode):
   elif mode=='loss':
     estop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, mode='min')
   return estop
+
+
+def preprocessing_fn(raw_features):
+    feature = tf.image.resize_with_pad(raw_features, target_height=224, target_width=224)
+    return feature
 
 
 
@@ -105,9 +108,8 @@ if __name__ == '__main__':
         train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.98,
                                                                     stratify=train_lab_categorical,
                                                                     random_state=40, shuffle = True)
-        if model_name.lower() == "vgg":
-            with tf.device('/cpu:0'):
-                train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
+
+        train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
         print ("train data shape after the split: ", train_im.shape)
         print ('new validation data shape: ', valid_im.shape)
         print ("validation labels shape: ", valid_lab.shape)
@@ -130,56 +132,67 @@ if __name__ == '__main__':
 
         print("############## Step: model definition...")
         with strategy.scope():
-            if model_name.lower() == "alexnet":
-                model=alexnet()
-            elif model_name.lower() == "inception":
-                model=Inception10()
+            if model_name.lower() == "inception":
+                from tensorflow.keras.applications.inception_v3 import InceptionV3
+                model=InceptionV3(weights=None, classes=num_class)
             elif model_name.lower() == "vgg":
                 model=vgg_16()
             elif model_name.lower() == "resnet152":
-                model=ResNet('ResNet152', num_class)
+                from tensorflow.keras.applications.resnet import ResNet152
+                model = ResNet152(weights=None, classes=num_class)
             elif model_name.lower() == "resnet50":
-                model = ResNet('ResNet50', num_class)
+                from tensorflow.keras.applications.resnet import ResNet50
+                model = ResNet50(weights=None, classes=num_class)
             elif model_name.lower() == "resnet101":
-                model = ResNet('ResNet101', num_class)
+                from tensorflow.keras.applications.resnet import ResNet101
+                model = ResNet101(weights=None, classes=num_class)
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
-
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
-                            metrics=['acc'])
-
+        print("##############配置训练相关参数，图片预处理，callback函数等...")
     #     working_dir="/tmp/tf2_result/"
     #     log_dir = os.path.join(working_dir, 'log')
     #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
     #     backup_dir = os.path.join(working_dir, 'backup')
-
         callbacks = [
         lrdecay
     #     ,tf.keras.callbacks.TensorBoard(log_dir=log_dir)
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
-        print("############## Step: training begins...")
-        def dataset_fn(input_context):
-            global_batch_size = FLAGS.batch_size
-            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
-            print("#######model :", FLAGS.model_name)
-            print("#######batch size :", batch_size)
-            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat()
-            dataset = dataset.shard(
-                input_context.num_input_pipelines,
-                input_context.input_pipeline_id)
-            dataset = dataset.batch(batch_size)
-            dataset = dataset.prefetch(2)
-            return dataset
+        global_batch_size = FLAGS.batch_size
+        def preprocessing_fn(raw_image, raw_label):
+            image = tf.image.resize_with_pad(raw_image, target_height=224, target_width=224)
+            return image, raw_label
 
+        def dataset_fn(input_context):
+            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
+            print("#######train model :", FLAGS.model_name)
+            print("#######batch size :", batch_size)
+            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
+                .map(preprocessing_fn, num_parallel_calls=batch_size).batch(batch_size)
+            dataset = dataset.prefetch(10)
+            return dataset
         distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
-        resnet_train = model.fit(distributed_dataset,
-                                        epochs=100,
-                                        steps_per_epoch=100,
-    #                                     validation_steps=valid_im.shape[0]/batch_size,
-    #                                     validation_data=validation_dataset,
+
+
+        def valid_dataset_fn(input_context):
+            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
+            print("#######Test model from valid data (a part of train data) :", FLAGS.model_name)
+            print("#######batch size :", batch_size)
+            valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).shuffle(64).repeat() \
+                .map(preprocessing_fn, num_parallel_calls=batch_size).batch(batch_size)
+            valid_dataset = valid_dataset.prefetch(10)
+            return valid_dataset
+        validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
+
+        # iteration number = epochs * steps_per_epoch
+        # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
+        print("############## Step: training begins...")
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3) \
+                      , metrics=['acc'])
+        model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
+                                        validation_steps=valid_im.shape[0]/global_batch_size,
+                                        validation_data=validation_dataset,
                                         callbacks=callbacks)
-    #iteration number = epochs * steps_per_epoch
-    #steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
+
