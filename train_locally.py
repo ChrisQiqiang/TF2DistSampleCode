@@ -9,7 +9,7 @@ from model.VGG import vgg_16
 
 
 
-#TODO: 添加AlexNet, Inception, VGG 16的模型；iterator方式读入数据；验证集使用；checkpoint使用。
+
 tf1.app.flags.DEFINE_string('ps_hosts', 'None', "private_ip1:port1, private_ip2:port2,....")
 tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     def dataset_fn(input_context):
         dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
-            .map(preprocessing_fn, num_parallel_calls=32).batch(32)
+            .map(preprocessing_fn, num_parallel_calls=16).batch(16)
         dataset = dataset.prefetch(10)
         return dataset
     distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
@@ -87,13 +87,14 @@ if __name__ == '__main__':
 
     def valid_dataset_fn(input_context):
         valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).shuffle(64).repeat() \
-            .map(preprocessing_fn, num_parallel_calls=32).batch(32)
+            .map(preprocessing_fn, num_parallel_calls=16).batch(16)
         valid_dataset = valid_dataset.prefetch(10)
         return valid_dataset
     validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
 
     from tensorflow.keras.applications.resnet import ResNet50
     model = ResNet50(weights=None, classes=num_class)
+
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                   metrics=['acc'])
     model.fit(distributed_dataset, epochs=10, batch_size=32,
