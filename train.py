@@ -156,12 +156,12 @@ if __name__ == '__main__':
     #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
     #     backup_dir = os.path.join(working_dir, 'backup')
     #    log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-    #    callbacks = [
-        # lrdecay,
+        callbacks = [
+         lrdecay,
     #    tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
-    #    ]
+        ]
         global_batch_size = FLAGS.batch_size
         def preprocessing_fn(raw_image, raw_label):
             image = tf.image.resize_with_pad(raw_image, target_height=224, target_width=224)
@@ -195,6 +195,6 @@ if __name__ == '__main__':
         model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
                                         # validation_steps=valid_im.shape[0]/global_batch_size,
                                         # validation_data=validation_dataset,
-                                        # callbacks=callbacks
+                                         callbacks=callbacks
                                         )
 
