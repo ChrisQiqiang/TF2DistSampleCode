@@ -102,8 +102,11 @@ func_train()
             echo ""
             echo "host: ${host} start ${task[$i]}"
             tmp=" run -v /home/ubuntu/TF2DistSampleCode:/code \
+                                --gpus all \
+                                --privileged=true \
+                                -p 127.0.0.1:6006:6006 \
                                 --name ${task[$i]} \
-                                --network host resnet /bin/bash -c \
+                                --network host tf2_image /bin/bash -c \
                                 \" python /code/train.py \
                                     --model_name=resnet50 \
                                     --dataset=vgg \
@@ -138,6 +141,8 @@ func_monitor(){
     for host in "${hosts[@]}"
     do
             echo "@@@ NOW MONITOR HOST ${i}: ${host} "
+            #启动profiler
+            ssh -i tf-faye.pem ubuntu@${host} "tensorboard --logdir=/home/ubuntu/TF2DistSampleCode/logs/ --bind_all“
             #创建新的logs文件目录
             ssh -i tf-faye.pem ubuntu@${host} "sudo rm -rf /home/ubuntu/tmp/logs/ && mkdir -p /home/ubuntu/tmp/logs/"
             #杀死已有进程

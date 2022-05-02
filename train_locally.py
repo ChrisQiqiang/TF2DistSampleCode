@@ -6,8 +6,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
 from model.VGG import vgg_16
-
-
+from datetime import datetime
 
 
 tf1.app.flags.DEFINE_string('ps_hosts', 'None', "private_ip1:port1, private_ip2:port2,....")
@@ -78,8 +77,8 @@ if __name__ == '__main__':
         return image, raw_label
 
     def dataset_fn(input_context):
-        dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
-            .map(preprocessing_fn, num_parallel_calls=16).batch(16)
+        dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64) \
+            .batch(16).map(preprocessing_fn, num_parallel_calls=16)
         dataset = dataset.prefetch(10)
         return dataset
     distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
@@ -97,10 +96,15 @@ if __name__ == '__main__':
 
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                   metrics=['acc'])
+    log_dir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
+
     model.fit(distributed_dataset, epochs=10, batch_size=32,
-              validation_steps=valid_im.shape[0]/32,
-              validation_data=validation_dataset,
-              steps_per_epoch=100)
+              # validation_steps=valid_im.shape[0]/32,
+              # validation_data=validation_dataset,
+              steps_per_epoch=100,
+              callbacks=[tensorboard_callback]
+              )
 
     # for x in train_im:
     #     print(np.shape(x), np.shape(tf.image.resize_with_pad(x, target_height=224, target_width=224)))

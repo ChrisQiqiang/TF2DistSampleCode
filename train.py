@@ -6,7 +6,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
 from model.VGG import vgg_16
-
+from datetime import datetime
 
 
 
@@ -155,9 +155,10 @@ if __name__ == '__main__':
     #     log_dir = os.path.join(working_dir, 'log')
     #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
     #     backup_dir = os.path.join(working_dir, 'backup')
+        log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         callbacks = [
-        lrdecay
-    #     ,tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+        # lrdecay,
+        tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
@@ -171,7 +172,7 @@ if __name__ == '__main__':
             print("#######train model :", FLAGS.model_name)
             print("#######batch size :", batch_size)
             dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
-                .map(preprocessing_fn, num_parallel_calls=batch_size).batch(batch_size)
+                .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
             dataset = dataset.prefetch(10)
             return dataset
         distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
