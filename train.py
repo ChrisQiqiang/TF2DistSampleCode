@@ -155,10 +155,15 @@ if __name__ == '__main__':
     #     log_dir = os.path.join(working_dir, 'log')
     #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
     #     backup_dir = os.path.join(working_dir, 'backup')
-        log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    #    log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         callbacks = [
+<<<<<<< HEAD
         lrdecay,
         tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
+=======
+         lrdecay,
+    #    tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
+>>>>>>> 5135085fe96e6f68548a49c725d2c1904c177a45
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
@@ -192,10 +197,18 @@ if __name__ == '__main__':
         # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
         print("############## Step: training begins...")
         
+<<<<<<< HEAD
         # tf.profiler.experimental.start('/code')
         model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
                                         # validation_steps=valid_im.shape[0]/global_batch_size,
                                         # validation_data=validation_dataset,
                                         callbacks=callbacks)
         # tf.profiler.experimental.stop()
+=======
+        model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
+                                        # validation_steps=valid_im.shape[0]/global_batch_size,
+                                        # validation_data=validation_dataset,
+                                         callbacks=callbacks
+                                        )
+>>>>>>> 5135085fe96e6f68548a49c725d2c1904c177a45
 
