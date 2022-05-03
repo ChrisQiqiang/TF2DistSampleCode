@@ -7,8 +7,7 @@ hosts_private=("172.31.85.198" "172.31.87.170")
 #放置策略（'chief位置','ps位置','worker位置'）
 placement=('1' '0' '1')
 #1为获取gitclone（刚创建实例时）
-update_code=0
-install_tools=0
+update_code=1
 
 args=$1
 
@@ -75,13 +74,6 @@ func_train()
     fi
 
     sleep 1m
-
-    if [ $install_tools -eq 1 ];then
-        for host in "${hosts[@]}"
-        do
-            ssh -i tf-faye.pem ubuntu@${host} "sudo apt-get install -y nethogs sysstat"
-        done
-    fi
 
     wait
 
