@@ -79,7 +79,7 @@ if __name__ == '__main__':
         # Load Cifar-10 data-set
         num_class = 0
         assert FLAGS.dataset not in ('cifar10','cifar100')
-        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data() if FLAGS.dataset == 'cifar10' elif  tf.keras.datasets.cifar100.load_data()
+        (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data() if FLAGS.dataset == 'cifar10' else  tf.keras.datasets.cifar100.load_data()
         num_class = 10 if FLAGS.dataset == 'cifar10' else 100
 
         #### Normalize the images to pixel values (0, 1)
