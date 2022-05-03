@@ -18,6 +18,7 @@ tf1.app.flags.DEFINE_integer('task_index', 0 , '')
 tf1.app.flags.DEFINE_string('model_name', 'alexnet', '')
 tf1.app.flags.DEFINE_integer('batch_size', 512 , '')
 tf1.app.flags.DEFINE_string('dataset', 'cifar100' , '')
+tf1.app.flags.DEFINE_integer('profiler_enable', 0, '')
 
 FLAGS = tf1.app.flags.FLAGS
 
@@ -77,6 +78,7 @@ if __name__ == '__main__':
         #         'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
         # Load Cifar-10 data-set
         num_class = 0
+        train_im, train_lab, test_im, test_lab = [],[],[],[]
         if FLAGS.dataset == 'cifar10':
             num_class = 10 
             (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
@@ -85,18 +87,18 @@ if __name__ == '__main__':
             (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
 
         #### Normalize the images to pixel values (0, 1)
-        train_im, test_im = train_im/255.0 , test_im/255.0
+        train_im, test_im = train_im/255.0, test_im/255.0
         #### Check the format of the data
-        print ("train_im, train_lab types: ", type(train_im), type(train_lab))
+        print("train_im, train_lab types: ", type(train_im), type(train_lab))
         #### check the shape of the data
-        print ("shape of images and labels array: ", train_im.shape, train_lab.shape)
-        print ("shape of images and labels array ; test: ", test_im.shape, test_lab.shape)
+        print("shape of images and labels array: ", train_im.shape, train_lab.shape)
+        print("shape of images and labels array ; test: ", test_im.shape, test_lab.shape)
 
         #### Check the distribution of unique elements
         (unique, counts) = np.unique(train_lab, return_counts=True)
         frequencies = np.asarray((unique, counts))
-        print (frequencies)
-        print (len(unique))
+        print(frequencies)
+        print(len(unique))
 
         ### One hot encoding for labels
 
@@ -110,9 +112,9 @@ if __name__ == '__main__':
                                                                     random_state=40, shuffle = True)
 
         train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
-        print ("train data shape after the split: ", train_im.shape)
-        print ('new validation data shape: ', valid_im.shape)
-        print ("validation labels shape: ", valid_lab.shape)
+        print("train data shape after the split: ", train_im.shape)
+        print('new validation data shape: ', valid_im.shape)
+        print("validation labels shape: ", valid_lab.shape)
 
 
         # train_dateset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
@@ -157,13 +159,16 @@ if __name__ == '__main__':
     #     backup_dir = os.path.join(working_dir, 'backup')
         log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         callbacks = [
-        lrdecay,
-        tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
+         lrdecay
     #    tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
+        if FLAGS.profiler_enable:
+            callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=1))
+        
         global_batch_size = FLAGS.batch_size
+
         def preprocessing_fn(raw_image, raw_label):
             image = tf.image.resize_with_pad(raw_image, target_height=224, target_width=224)
             return image, raw_label
@@ -176,8 +181,8 @@ if __name__ == '__main__':
                 .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
             dataset = dataset.prefetch(10)
             return dataset
-        distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
 
+        distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
 
         def valid_dataset_fn(input_context):
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
@@ -190,18 +195,12 @@ if __name__ == '__main__':
                 .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
             valid_dataset = valid_dataset.prefetch(10)
             return valid_dataset
+
         validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
 
         # iteration number = epochs * steps_per_epoch
         # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
         print("############## Step: training begins...")
-
-        # tf.profiler.experimental.start('/code')
-        model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
-                                        # validation_steps=valid_im.shape[0]/global_batch_size,
-                                        # validation_data=validation_dataset,
-                                        callbacks=callbacks)
-        # tf.profiler.experimental.stop()
         model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
                                         # validation_steps=valid_im.shape[0]/global_batch_size,
                                         # validation_data=validation_dataset,

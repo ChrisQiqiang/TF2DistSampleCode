@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                   metrics=['acc'])
-    log_dir = "./logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = "../logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
 
     model.fit(distributed_dataset, epochs=10, batch_size=32,
