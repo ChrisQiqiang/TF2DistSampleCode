@@ -157,7 +157,7 @@ if __name__ == '__main__':
     #     backup_dir = os.path.join(working_dir, 'backup')
         log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         callbacks = [
-        # lrdecay,
+        lrdecay,
         tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
@@ -181,8 +181,8 @@ if __name__ == '__main__':
         def valid_dataset_fn(input_context):
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
             print("#######Test model from valid data (a part of train data) :", FLAGS.model_name)
-            print("#######batch size :", batch_size)
-            valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).shuffle(64).repeat() \
+            valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).sh
+            print("#######batch size :", batch_size)uffle(64).repeat() \
                 .map(preprocessing_fn, num_parallel_calls=batch_size).batch(batch_size)
             valid_dataset = valid_dataset.prefetch(10)
             return valid_dataset
@@ -192,10 +192,10 @@ if __name__ == '__main__':
         # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
         print("############## Step: training begins...")
         
-        tf.profiler.experimental.start('/code')
+        # tf.profiler.experimental.start('/code')
         model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
                                         # validation_steps=valid_im.shape[0]/global_batch_size,
                                         # validation_data=validation_dataset,
                                         callbacks=callbacks)
-        tf.profiler.experimental.stop()
+        # tf.profiler.experimental.stop()
 
