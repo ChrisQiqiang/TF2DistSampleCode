@@ -200,5 +200,5 @@ if __name__ == '__main__':
         model.fit(distributed_dataset, epochs=100, steps_per_epoch=100,
                                         # validation_steps=valid_im.shape[0]/global_batch_size,
                                         # validation_data=validation_dataset,
-                                         callbacks=callbacks
+                                        # callbacks=callbacks
                                         )
