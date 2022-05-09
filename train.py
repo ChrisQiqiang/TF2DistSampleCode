@@ -160,8 +160,8 @@ if __name__ == '__main__':
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
-        if FLAGS.profiler_enable:
-            callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=1))
+#         if FLAGS.profiler_enable:
+#             callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=1))
 
         global_batch_size = FLAGS.batch_size
 
