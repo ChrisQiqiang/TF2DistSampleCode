@@ -50,7 +50,7 @@ if __name__ == '__main__':
     if FLAGS.task_name in ("worker", "ps"):
         # Set the environment variable to allow reporting worker and ps failure to the
         # coordinator. This is a workaround and won't be necessary in the future.
-        os.environ["GRPC_FAIL_FAST"] = "use_caller"
+        #os.environ["GRPC_FAIL_FAST"] = "use_caller"
         print(cluster_spec, FLAGS.task_name)
         server = tf.distribute.Server(
             cluster_spec,
