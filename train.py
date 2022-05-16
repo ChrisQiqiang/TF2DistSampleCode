@@ -133,7 +133,8 @@ if __name__ == '__main__':
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
-            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), metrics=['acc'])
+            #model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), metrics=['acc'])
+            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3))
         print("##############配置训练相关参数，图片预处理，callback函数等...")
     #     working_dir="/tmp/tf2_result/"
     #     log_dir = os.path.join(working_dir, 'log')
