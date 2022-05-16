@@ -35,20 +35,6 @@ def lrdecay(epoch):
         lr *= 1e-1
     return lr
 
-def earlystop(mode):
-  if mode=='acc':
-    estop = tf.keras.callbacks.EarlyStopping(monitor='val_acc', patience=15, mode='max')
-  elif mode=='loss':
-    estop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, mode='min')
-  return estop
-
-
-def preprocessing_fn(raw_features):
-    feature = tf.image.resize_with_pad(raw_features, target_height=224, target_width=224)
-    return feature
-
-
-
 if __name__ == '__main__':
     # Set the environment variable to allow reporting worker and ps failure to the
     # coordinator. This is a workaround and won't be necessary in the future.
