@@ -8,8 +8,6 @@ import tensorflow._api.v2.compat.v1 as tf1
 from model.VGG import vgg_16
 from datetime import datetime
 
-
-
 tf1.app.flags.DEFINE_string('ps_hosts', 'None', "private_ip1:port1, private_ip2:port2,....")
 tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
@@ -50,7 +48,6 @@ if __name__ == '__main__':
     if FLAGS.task_name in ("worker", "ps"):
         # Set the environment variable to allow reporting worker and ps failure to the
         # coordinator. This is a workaround and won't be necessary in the future.
-        #os.environ["GRPC_FAIL_FAST"] = "use_caller"
         print(cluster_spec, FLAGS.task_name)
         server = tf.distribute.Server(
             cluster_spec,
@@ -60,9 +57,7 @@ if __name__ == '__main__':
             start=True)
         server.join()
     else:
-        # class_types = ['airplane', 'automobile', 'bird', 'cat', 'deer',
-        #         'dog', 'frog', 'horse', 'ship', 'truck'] # from cifar-10 website
-        # Load Cifar-10 data-set
+        # Load Cifar-10 or Cifar-100 dataset
         num_class = 0
         assert FLAGS.dataset in ('cifar10','cifar100')
         (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data() if FLAGS.dataset == 'cifar10' else  tf.keras.datasets.cifar100.load_data()
@@ -136,10 +131,8 @@ if __name__ == '__main__':
             #model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3), metrics=['acc'])
             model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3))
         print("##############配置训练相关参数，图片预处理，callback函数等...")
-    #     working_dir="/tmp/tf2_result/"
-    #     log_dir = os.path.join(working_dir, 'log')
-    #     ckpt_filepath = os.path.join(working_dir, 'ckpt')
-    #     backup_dir = os.path.join(working_dir, 'backup')
+    #     ckpt_filepath = os.path.join("/tmp/tf2_result/", 'ckpt')
+    #     backup_dir = os.path.join("/tmp/tf2_result/", 'backup')
         log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         callbacks = [
          lrdecay
