@@ -157,8 +157,8 @@ if __name__ == '__main__':
         def dataset_fn(input_context):
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
             print("####### train model :", FLAGS.model_name)
-            print("####### dataset :", batch_size)
-            print("####### batch size :", FLAGS.dataset)
+            print("####### dataset :", FLAGS.dataset)
+            print("####### batch size :", batch_size)
             dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
                 .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
             dataset = dataset.prefetch(10)
