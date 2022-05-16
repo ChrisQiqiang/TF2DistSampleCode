@@ -142,7 +142,6 @@ if __name__ == '__main__':
         log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         callbacks = [
          lrdecay
-    #    tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
         ]
@@ -157,8 +156,9 @@ if __name__ == '__main__':
 
         def dataset_fn(input_context):
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
-            print("#######train model :", FLAGS.model_name)
-            print("#######batch size :", batch_size)
+            print("####### train model :", FLAGS.model_name)
+            print("####### dataset :", batch_size)
+            print("####### batch size :", FLAGS.dataset)
             dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
                 .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
             dataset = dataset.prefetch(10)
