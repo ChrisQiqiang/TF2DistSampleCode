@@ -41,8 +41,8 @@ def earlystop(mode):
   return estop
 
 if __name__ == '__main__':
-    num_class = 10
-    (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar10.load_data()
+    num_class = 100
+    (train_im, train_lab), (test_im, test_lab) = tf.keras.datasets.cifar100.load_data()
 
     #### Normalize the images to pixel values (0, 1)
     train_im, test_im = train_im / 255.0, test_im / 255.0
@@ -71,40 +71,33 @@ if __name__ == '__main__':
                                                                 stratify=train_lab_categorical,
                                                                 random_state=40, shuffle=True)
 
-
-    def preprocessing_fn(raw_image, raw_label):
-        image = tf.image.resize_with_pad(raw_image, target_height=224, target_width=224)
-        return image, raw_label
+    # dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64)
+    # print(dataset.element_spec)
+    # dataset2 = dataset.map(lambda x, y: (tf.image.resize_with_pad(x, target_height=224, target_width=224), y))
+    # print(dataset2.element_spec)
+    # dataset1 = dataset2.batch(16)
+    # print(dataset1.element_spec)
 
     def dataset_fn(input_context):
-        dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64) \
-            .batch(16).map(preprocessing_fn, num_parallel_calls=16)
-        dataset = dataset.prefetch(10)
+        dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).batch(16) \
+                .map(lambda x, y: (tf.image.resize_with_crop_or_pad(x, target_height=224, target_width=224), y))
+        dataset = dataset.prefetch(1)
         return dataset
     distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
 
-
-    def valid_dataset_fn(input_context):
-        valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).shuffle(64).repeat() \
-            .map(preprocessing_fn, num_parallel_calls=16).batch(16)
-        valid_dataset = valid_dataset.prefetch(10)
-        return valid_dataset
-    validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
-
-    from tensorflow.keras.applications.resnet import ResNet50
-    model = ResNet50(weights=None, classes=num_class)
-
+    # from tensorflow.keras.applications.resnet import ResNet50
+    # model = ResNet50(weights=None, classes=num_class)
+    from model.VGG import vgg_16
+    model = vgg_16(100)
+    model.summary()
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3),
                   metrics=['acc'])
-    log_dir = "../logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
+    # log_dir = "../logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=3)
 
-    model.fit(distributed_dataset, epochs=10, batch_size=32,
+    model.fit(distributed_dataset, epochs=10, batch_size=2,
               # validation_steps=valid_im.shape[0]/32,
               # validation_data=validation_dataset,
-              steps_per_epoch=100,
-              callbacks=[tensorboard_callback]
+              steps_per_epoch=100
+              # ,callbacks=[tensorboard_callback]
               )
-
-    # for x in train_im:
-    #     print(np.shape(x), np.shape(tf.image.resize_with_pad(x, target_height=224, target_width=224)))

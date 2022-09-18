@@ -14,7 +14,7 @@ import numpy as np
 
 np.set_printoptions(threshold=np.inf)
 
-def vgg_16():
+def vgg_16(num_class):
         model = Sequential()
         model.add(Conv2D(input_shape=(224, 224, 3), filters=64, kernel_size=(3, 3), padding="same", activation="relu"))
         model.add(Conv2D(filters=64, kernel_size=(3, 3), padding="same", activation="relu"))
@@ -37,7 +37,7 @@ def vgg_16():
         model.add(Flatten())
         model.add(Dense(units=4096, activation="relu"))
         model.add(Dense(units=4096, activation="relu"))
-        model.add(Dense(units=10, activation="softmax"))
+        model.add(Dense(units=num_class, activation="softmax"))
         print("#######hi")
         return model
 if __name__ == '__main__':
