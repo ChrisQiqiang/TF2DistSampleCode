@@ -6,6 +6,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 import tensorflow._api.v2.compat.v1 as tf1
 from model.VGG import vgg_16
+from model.VGG import vgg_19
 from datetime import datetime
 
 tf1.app.flags.DEFINE_string('ps_hosts', 'None', "private_ip1:port1, private_ip2:port2,....")
@@ -114,8 +115,10 @@ if __name__ == '__main__':
             if model_name.lower() == "inception":
                 from tensorflow.keras.applications.inception_v3 import InceptionV3
                 model=InceptionV3(weights=None, classes=num_class)
-            elif model_name.lower() == "vgg":
+            elif model_name.lower() == "vgg16":
                 model=vgg_16()
+            elif model_name.lower() == "vgg19":
+                model=vgg_19()
             elif model_name.lower() == "resnet152":
                 from tensorflow.keras.applications.resnet import ResNet152
                 model = ResNet152(weights=None, classes=num_class)
