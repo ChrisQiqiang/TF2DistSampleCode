@@ -14,7 +14,7 @@ tf1.app.flags.DEFINE_string('worker_hosts', 'None', "")
 tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
-tf1.app.flags.DEFINE_string('model_name', 'alexnet', '')
+tf1.app.flags.DEFINE_string('model_name', 'inception', '')
 tf1.app.flags.DEFINE_integer('batch_size', 512 , '')
 tf1.app.flags.DEFINE_string('dataset', 'cifar100' , '')
 tf1.app.flags.DEFINE_integer('profiler_enable', 0, '')
@@ -117,8 +117,8 @@ if __name__ == '__main__':
                 model=InceptionV3(weights=None, classes=num_class)
             elif model_name.lower() == "vgg16":
                 model=vgg_16()
-            elif model_name.lower() == "vgg19":
-                model=vgg_19()
+            # elif model_name.lower() == "vgg19":
+            #     model=vgg_19()
             elif model_name.lower() == "resnet152":
                 from tensorflow.keras.applications.resnet import ResNet152
                 model = ResNet152(weights=None, classes=num_class)
@@ -147,35 +147,22 @@ if __name__ == '__main__':
 
         global_batch_size = FLAGS.batch_size
 
-        def preprocessing_fn(raw_image, raw_label):
-            image = tf.image.resize_with_pad(raw_image, target_height=224, target_width=224)
-            return image, raw_label
 
         def dataset_fn(input_context):
             batch_size = input_context.get_per_replica_batch_size(global_batch_size)
             print("####### train model :", FLAGS.model_name)
             print("####### dataset :", FLAGS.dataset)
             print("####### batch size :", batch_size)
-            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
-                .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
-            dataset = dataset.prefetch(10)
+            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).batch(16) \
+                .map(lambda x, y: (tf.image.resize_with_crop_or_pad(x, target_height=299, target_width=299), y))
+            dataset = dataset.prefetch(1)
             return dataset
 
         distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
 
-        def valid_dataset_fn(input_context):
-            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
-            print("#######Test model from valid data (a part of train data) :", FLAGS.model_name)
-            valid_dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).sh
-            print("#######batch size :", batch_size)
-            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64) \
-                .batch(16).map(preprocessing_fn, num_parallel_calls=16)
-            valid_dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).repeat() \
-                .batch(batch_size).map(preprocessing_fn, num_parallel_calls=batch_size)
-            valid_dataset = valid_dataset.prefetch(10)
-            return valid_dataset
 
-        validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
+
+        # validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
 
         # iteration number = epochs * steps_per_epoch
         # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
