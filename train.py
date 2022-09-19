@@ -153,7 +153,7 @@ if __name__ == '__main__':
             print("####### train model :", FLAGS.model_name)
             print("####### dataset :", FLAGS.dataset)
             print("####### batch size :", batch_size)
-            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).batch(16).repeat(500) \
+            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).batch(batch_size).repeat(500) \
                 .map(lambda x, y: (tf.image.resize_with_crop_or_pad(x, target_height=299, target_width=299), y))
             dataset = dataset.prefetch(1)
             return dataset
