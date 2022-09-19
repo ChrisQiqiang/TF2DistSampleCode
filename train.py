@@ -22,8 +22,8 @@ tf1.app.flags.DEFINE_integer('profiler_enable', 0, '')
 FLAGS = tf1.app.flags.FLAGS
 
 ### Define some Callbacks
-def lrdecay(epoch):
-    lr = 1e-2
+# def lrdecay(epoch):
+#     lr = 1e-2
 #     if epoch > 160:
 #         lr *= 0.5e-3
 #     elif epoch > 120:
@@ -32,7 +32,7 @@ def lrdecay(epoch):
 #         lr *= 1e-2
 #     elif epoch > 20:
 #         lr *= 1e-1
-    return lr
+#     return lr
 
 if __name__ == '__main__':
     # Set the environment variable to allow reporting worker and ps failure to the
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
         # train_dateset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
         print("############## Step: dataset prepared, set lrdecay next...")
-        lrdecay = tf.keras.callbacks.LearningRateScheduler(lrdecay) # learning rate decay
+#         lrdecay = tf.keras.callbacks.LearningRateScheduler(lrdecay) # learning rate decay
         print("############## Step: set lrdecay, partition variable next...")
         variable_partitioner = (
             tf.distribute.experimental.partitioners.MinSizePartitioner(
@@ -137,11 +137,11 @@ if __name__ == '__main__':
     #     ckpt_filepath = os.path.join("/tmp/tf2_result/", 'ckpt')
     #     backup_dir = os.path.join("/tmp/tf2_result/", 'backup')
         log_dir = "/code/logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-        callbacks = [
-         lrdecay
+#         callbacks = [
+#          lrdecay
     #     ,tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_filepath)
     #     ,tf.keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir)
-        ]
+#         ]
         if FLAGS.profiler_enable:
             callbacks.append(tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=1))
 
@@ -170,5 +170,5 @@ if __name__ == '__main__':
         model.fit(distributed_dataset, epochs=200, steps_per_epoch=30,
                                         # validation_steps=valid_im.shape[0]/global_batch_size,
                                         # validation_data=validation_dataset,
-                                        callbacks=callbacks
+#                                         callbacks=callbacks
                                         )
