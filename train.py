@@ -89,10 +89,10 @@ if __name__ == '__main__':
                                                                     stratify=train_lab_categorical,
                                                                     random_state=40, shuffle = True)
 
-        train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
-        print("train data shape after the split: ", train_im.shape)
-        print('new validation data shape: ', valid_im.shape)
-        print("validation labels shape: ", valid_lab.shape)
+#         train_im = tf.image.resize_with_pad(train_im, target_height=224, target_width=224)
+#         print("train data shape after the split: ", train_im.shape)
+#         print('new validation data shape: ', valid_im.shape)
+#         print("validation labels shape: ", valid_lab.shape)
 
 
         # train_dateset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
             print("####### train model :", FLAGS.model_name)
             print("####### dataset :", FLAGS.dataset)
             print("####### batch size :", batch_size)
-            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).batch(16) \
+            dataset = tf.data.Dataset.from_tensor_slices((train_im, train_lab)).shuffle(64).batch(16).repeat(10) \
                 .map(lambda x, y: (tf.image.resize_with_crop_or_pad(x, target_height=299, target_width=299), y))
             dataset = dataset.prefetch(1)
             return dataset
