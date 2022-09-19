@@ -131,7 +131,7 @@ if __name__ == '__main__':
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
-            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-3))
+            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-2))
             
         print("##############配置训练相关参数，图片预处理，callback函数等...")
     #     ckpt_filepath = os.path.join("/tmp/tf2_result/", 'ckpt')
