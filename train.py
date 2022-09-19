@@ -15,7 +15,7 @@ tf1.app.flags.DEFINE_string('chief_host', 'None', "")
 tf1.app.flags.DEFINE_string('task_name', 'None', "ps,worker,chief")
 tf1.app.flags.DEFINE_integer('task_index', 0 , '')
 tf1.app.flags.DEFINE_string('model_name', 'inception', '')
-tf1.app.flags.DEFINE_integer('batch_size', 384 , '')
+tf1.app.flags.DEFINE_integer('batch_size', 128 , '')
 tf1.app.flags.DEFINE_string('dataset', 'cifar100' , '')
 tf1.app.flags.DEFINE_integer('profiler_enable', 0, '')
 
