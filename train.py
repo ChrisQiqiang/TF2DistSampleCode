@@ -23,15 +23,15 @@ FLAGS = tf1.app.flags.FLAGS
 
 ### Define some Callbacks
 def lrdecay(epoch):
-    lr = 1e-1
-#     if epoch > 180:
-#         lr *= 0.5e-3
-#     elif epoch > 160:
-#         lr *= 1e-3
-#     elif epoch > 120:
-#         lr *= 1e-2
-#     elif epoch > 80:
-#         lr *= 1e-1
+    lr = 1e-2
+    if epoch > 160:
+        lr *= 0.5e-3
+    elif epoch > 120:
+        lr *= 1e-3
+    elif epoch > 80:
+        lr *= 1e-2
+    elif epoch > 20:
+        lr *= 1e-1
     return lr
 
 if __name__ == '__main__':
