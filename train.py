@@ -174,6 +174,6 @@ if __name__ == '__main__':
         print("############## Step: training begins...")
         model.fit(distributed_dataset, epochs=800, steps_per_epoch=30,
                                         validation_steps=valid_im.shape[0]/global_batch_size,
-                                        validation_data=validation_dataset,
-#                                         callbacks=callbacks
+                                        validation_data=validation_dataset
+#                                        , callbacks=callbacks
                                         )
