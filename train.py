@@ -172,8 +172,8 @@ if __name__ == '__main__':
         # iteration number = epochs * steps_per_epoch
         # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
         print("############## Step: training begins...")
-        model.fit(distributed_dataset, epochs=800, steps_per_epoch=30,
-                                        validation_steps=valid_im.shape[0]/global_batch_size,
-                                        validation_data=validation_dataset
+        model.fit(distributed_dataset, epochs=800, steps_per_epoch=30
+#                                         ,validation_steps=valid_im.shape[0]/global_batch_size
+#                                         ,validation_data=validation_dataset
 #                                        , callbacks=callbacks
                                         )
