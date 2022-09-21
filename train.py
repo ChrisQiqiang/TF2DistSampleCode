@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
 
         ### Train -test split
-        train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.98,
+        train_im, valid_im, train_lab, valid_lab = train_test_split(train_im, train_lab_categorical, test_size=0.1,
                                                                     stratify=train_lab_categorical,
                                                                     random_state=40, shuffle = True)
 
@@ -131,7 +131,7 @@ if __name__ == '__main__':
             else:
                 ex = Exception("Exception: your model is not supported by our python script, please build your model by yourself.")
                 raise ex
-            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-2))
+            model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=1e-2),metrics=['accuracy', 'top_k_categorical_accuracy'])
             
         print("##############配置训练相关参数，图片预处理，callback函数等...")
     #     ckpt_filepath = os.path.join("/tmp/tf2_result/", 'ckpt')
@@ -160,15 +160,20 @@ if __name__ == '__main__':
 
         distributed_dataset = tf.keras.utils.experimental.DatasetCreator(dataset_fn)
 
+        def valid_dataset_fn(input_context):
+            batch_size = input_context.get_per_replica_batch_size(global_batch_size)
+            dataset = tf.data.Dataset.from_tensor_slices((valid_im, valid_lab)).shuffle(64).batch(batch_size).repeat(500) \
+                .map(lambda x, y: (tf.image.resize_with_crop_or_pad(x, target_height=299, target_width=299), y))
+            dataset = dataset.prefetch(1)
+            return dataset
 
-
-        # validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
+        validation_dataset = tf.keras.utils.experimental.DatasetCreator(valid_dataset_fn)
 
         # iteration number = epochs * steps_per_epoch
         # steps_per_epoch为一个epoch里有多少次batch迭代（即一个epoch里有多少个iteration）
         print("############## Step: training begins...")
         model.fit(distributed_dataset, epochs=800, steps_per_epoch=30,
-                                        # validation_steps=valid_im.shape[0]/global_batch_size,
-                                        # validation_data=validation_dataset,
+                                        validation_steps=valid_im.shape[0]/global_batch_size,
+                                        validation_data=validation_dataset,
 #                                         callbacks=callbacks
                                         )
